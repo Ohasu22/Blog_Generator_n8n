@@ -1,0 +1,249 @@
+{
+  "name": "WebScraper_Test2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6b8b68ac-78d8-48d8-8359-d835b465c06b",
+      "name": "Webhook",
+      "webhookId": "f999a7d3-752e-48fa-82b9-df3396ea5660"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = typeof $json.body === \"string\"\n  ? JSON.parse($json.body)\n  : $json.body;\n\nif (!body.keywords || body.keywords.trim() === \"\") {\n  throw new Error(\"Please provide keywords\");\n}\n\nreturn [{\n  query: body.keywords.trim()\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "416e4a15-e40a-4932-9f68-72bb2f2e4c3a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/everything",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{$json.query}}"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            },
+            {
+              "name": "pageSize",
+              "value": "5"
+            },
+            {
+              "name": "sortBy",
+              "value": "publishedAt"
+            },
+            {
+              "name": "apikey",
+              "value": "c32a3e8758004f4784f67c3ea8de7718"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "c6400897-2275-4f2a-be1c-8ca16e95d57e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items[0].json.articles.map(article => {\n  return { ...article };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "8077a033-e0ce-40f8-806a-0d32683c994b",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.filter(item => {\n  const url = item.json.url || \"\";\n  const content = item.json.content || \"\";\n\n  return (\n    // ✅ valid URL\n    typeof url === \"string\" &&\n    url.startsWith(\"http\") &&\n\n    // ❌ avoid obvious non-article patterns\n    !url.match(/consent|login|signup|auth/i) &&\n    !url.match(/\\/video|\\/watch|\\/shorts/i) &&\n\n    // ❌ avoid empty or useless content\n    content &&\n    !content.match(/copyright|all rights reserved/i)\n  );\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "81f783ce-d890-4f66-b9e0-6eb091f50be1",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "url": "={{$json.url}}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"User-Agent\": \"Mozilla/5.0\",\n  \"Accept\": \"text/html\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "4366aa0c-5073-4ace-8b22-ae8750cd2627",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "title"
+            },
+            {
+              "key": "description",
+              "cssSelector": "meta[name=\"description\"]",
+              "returnValue": "attribute",
+              "attribute": "content"
+            },
+            {
+              "key": "url",
+              "cssSelector": "link[rel=\"canonical\"]",
+              "returnValue": "attribute",
+              "attribute": "href"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        272
+      ],
+      "id": "44c86b70-8007-4851-b05c-367487574685",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map((item, index) => {\n  const html = item.json.data || \"\";\n\n  // Step 1: Clean noisy tags\n  let cleanHtml = html\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n    .replace(/<nav[\\s\\S]*?<\\/nav>/gi, '')\n    .replace(/<footer[\\s\\S]*?<\\/footer>/gi, '')\n    .replace(/<aside[\\s\\S]*?<\\/aside>/gi, '')\n    .replace(/<header[\\s\\S]*?<\\/header>/gi, '')\n    .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, '');\n\n  // Step 2: Try to extract content from <article> or common classes\n  let match = cleanHtml.match(/<article[\\s\\S]*?<\\/article>/i);\n\n  if (!match) {\n    match = cleanHtml.match(/<div[^>]*class=\"[^\"]*(article-body|content|main-content)[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/i);\n  }\n\n  const articleHtml = match ? match[0] : cleanHtml;\n\n  // Step 3: Strip all remaining tags\n  const plainText = articleHtml\n    .replace(/<[^>]+>/g, '')      // Remove all tags\n    .replace(/\\s{2,}/g, ' ')      // Collapse whitespace\n    .trim();\n\n  // Step 4: Fetch corresponding metadata from another node (Code1)\n  const meta = $items('Code1', 0)[index].json;\n\n  return {\n    json: {\n      title: meta.title || '',\n      link: meta.link || '',\n      pubDate: meta.pubDate || '',\n      content: plainText\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "9dc1ecc6-9bf6-4b4f-b9bc-ee97cca570c3",
+      "name": "Code in JavaScript3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ff4a1450-0344-4ad9-884b-585e2d0eb9d4",
+  "meta": {
+    "instanceId": "9c55b22b9cae2c85be1ca3893e187c1c8a7db99f0c3efb3d0c905719b4f2da2a"
+  },
+  "id": "qhVBO7Zj9eo90Hx0",
+  "tags": []
+}
