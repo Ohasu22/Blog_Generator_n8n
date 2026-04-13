@@ -74,15 +74,9 @@ The generated blog post is delivered directly to your email in a professionally 
 3. **AI Processing** - Google Gemini transforms articles into blog posts
 4. **Email Generation** - Blog formatted as email-ready content
 5. **Delivery** - Automated email sent to user's registered inbox
-6. **Archive** - Blog post stored for future reference
+
 
 ### Input Interface
-
-Users interact with a simple keyword input page:
-
-**Keyword Input Screen:**
-<!-- Insert Keyword Input Interface Image Here -->
-![Keyword Input Interface](IMAGE_URL_HERE)
 
 **Instructions:**
 1. Enter your desired keywords (e.g., "artificial intelligence", "tech innovation")
@@ -97,102 +91,14 @@ Users interact with a simple keyword input page:
 
 The generated blog post is delivered directly to your email in a professionally formatted message:
 
-**Generated Blog Post Output (Email):**
-<!-- Insert Email Output/Blog Post Image Here -->
-![Generated Blog Post Email](IMAGE_URL_HERE)
-
 **Email Content Includes:**
 - 📝 **Subject Line** - Compelling title based on content
 - 🎯 **Summary** - Quick overview at the top
-- 📄 **Full Article** - Well-structured, formatted blog content
 - 🏷️ **Tags & Categories** - SEO-friendly keywords
 - 📅 **Metadata** - Publication date and source attribution
 - 🔗 **Read More Link** - Optional link to original source
-- ⏱️ **Reading Time** - Estimated time to read
-
+- 
 ---
-
-## Email Configuration
-
-### SMTP Settings
-
-The workflow uses SMTP protocol to send emails. Configure the following:
-
-```json
-{
-  "email_provider": "SMTP",
-  "sender_email": "your-email@gmail.com",
-  "smtp_host": "smtp.gmail.com",
-  "smtp_port": 587,
-  "encryption": "TLS",
-  "recipient": "user_email_input"
-}
-```
-
-### Supported Email Providers
-
-| Provider | Host | Port |
-|----------|------|------|
-| Gmail | smtp.gmail.com | 587 |
-| Outlook | smtp-mail.outlook.com | 587 |
-| Yahoo | smtp.mail.yahoo.com | 587 |
-| Custom SMTP | [your-host] | 587/465 |
-
----
-
-## Technology Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Automation Platform | N8N |
-| AI Model | Google Gemini Chat API |
-| Content Source (V1) | RSS Feeds |
-| Content Source (V2) | Web Scraper Node |
-| Email Service | SMTP Protocol |
-| Output Format | HTML Email / Markdown Blog Post |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- N8N instance (self-hosted or cloud)
-- Google Gemini API key
-- Email account credentials (Gmail, Outlook, etc.)
-- RSS feed URLs (for Version 1) or internet access (for Version 2)
-
-### Installation
-
-1. **Import Workflow**
-   - Download the respective JSON file (V1 or V2)
-   - Open your N8N dashboard
-   - Click "Import from file"
-   - Select the downloaded JSON
-
-2. **Configure API Keys**
-   - Add your Google Gemini API credentials
-   - Set up SMTP email credentials
-   - Set up authentication for RSS feeds (if applicable)
-
-3. **Email Setup**
-   - Configure SMTP host and port
-   - Add sender email and password
-   - Test email delivery with a sample message
-
-4. **Customize Settings**
-   - Adjust AI parameters (tone, length, style)
-   - Configure email template
-   - Set RSS feeds (Version 1 only)
-   - Set web scraper parameters (Version 2 only)
-
-5. **Deploy Workflow**
-   - Save and activate the workflow
-   - Test with sample keywords
-   - Verify email delivery to your inbox
-
----
-
 ## Usage Examples
 
 ### Example 1: Tech News Blog (Version 1 - RSS)
@@ -214,126 +120,6 @@ Sources: Multiple web sources (dynamically sourced)
 Delivery: Email arrives within 10 minutes of generation
 ```
 
----
-
-## Configuration Guide
-
-### Version 1 - RSS Feed Setup
-```json
-{
-  "rss_feeds": [
-    "https://example-news-1.com/feed.xml",
-    "https://example-news-2.com/feed.xml"
-  ],
-  "keyword_filter": "user_input",
-  "ai_model": "Google Gemini",
-  "email_config": {
-    "smtp_host": "smtp.gmail.com",
-    "smtp_port": 587,
-    "sender_email": "your-email@gmail.com",
-    "recipient_email": "user_input"
-  }
-}
-```
-
-### Version 2 - Web Scraper Setup
-```json
-{
-  "search_method": "web_scraper",
-  "keyword_input": "user_input",
-  "ai_model": "Google Gemini",
-  "result_limit": 10,
-  "email_config": {
-    "smtp_host": "smtp.gmail.com",
-    "smtp_port": 587,
-    "sender_email": "your-email@gmail.com",
-    "recipient_email": "user_input"
-  }
-}
-```
-
----
-
-## Project Structure
-
-```
-Blog_Generator_n8n/
-├── README.md
-├── VERSION_1_RSS_BlogGenerator.json
-├── VERSION_2_WebScraper_BlogGenerator.json
-├── docs/
-│   ├── workflow-diagram-v1.png
-│   ├── workflow-diagram-v2.png
-│   ├── keyword-input-interface.png
-│   ├── email-output-example.png
-│   └── sample-output.png
-└── examples/
-    ├── sample-keywords.txt
-    ├── sample-output-blog.md
-    └── sample-email-template.html
-```
-
----
-
-## Email Templates
-
-### Default Email Template
-
-The workflow uses an HTML email template. Customize the template in the N8N Email Node:
-
-```html
-<html>
-  <body style="font-family: Arial, sans-serif; max-width: 600px;">
-    <h1>{{blog_title}}</h1>
-    <p><strong>Keywords Used:</strong> {{keywords}}</p>
-    <p><strong>Source:</strong> {{source}}</p>
-    <hr>
-    <div>
-      {{blog_content}}
-    </div>
-    <hr>
-    <p><small>Generated by N8N Blog Generator | {{generation_date}}</small></p>
-  </body>
-</html>
-```
-
----
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Email not arriving | Check SMTP credentials; verify email not in spam folder |
-| API Key Error | Verify Google Gemini API key and quota limits |
-| No Results Found | Check keyword relevance; try broader terms for V2 |
-| Slow Processing | Adjust AI model parameters; reduce article length |
-| RSS Feed Error (V1) | Validate RSS feed URLs; check feed accessibility |
-| SMTP Authentication Failed | Verify email password; enable "Less secure apps" (Gmail) |
-
----
-
-## Performance Metrics
-
-- **Average Processing Time:** 2-5 minutes per blog post
-- **Email Delivery Time:** 1-10 minutes after generation
-- **Article Length:** 500-1500 words (configurable)
-- **Success Rate:** 95%+
-- **Concurrent Workflows:** Depends on N8N instance capacity
-
----
-
-## Customization Options
-
-- 🎨 **Tone & Style** - Formal, casual, professional, creative
-- 📊 **Article Length** - Short (300-500), Medium (500-1000), Long (1000-2000)
-- 🏷️ **SEO Tags** - Auto-generate or custom list
-- 🌍 **Language** - Support for multiple languages
-- 📋 **Template** - Choose blog post structure
-- 📧 **Email Format** - HTML, Plain text, or Markdown
-- 🎯 **Multiple Recipients** - Send to multiple email addresses
-
----
-
 ## API Keys & Credentials Required
 
 - **Google Gemini API**
@@ -347,27 +133,4 @@ The workflow uses an HTML email template. Customize the template in the N8N Emai
 
 ---
 
-## Future Enhancements
 
-- [ ] Multi-language support
-- [ ] Custom blog templates
-- [ ] Direct publishing to WordPress/Medium/Substack
-- [ ] Advanced keyword analysis
-- [ ] Email scheduling (send at specific times)
-- [ ] Multiple recipient management
-- [ ] Blog post archiving system
-- [ ] Analytics dashboard
-- [ ] PDF generation option
-
----
-
-## Acknowledgments
-
-- N8N Community for the powerful automation platform
-- Google for the Gemini AI API
-- Open-source RSS and web scraping tools
-- Email service providers
-
----
-
-**Last Updated:** 2026-04-13
